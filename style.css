@@ -6,7 +6,7 @@
   user-select: none;
   width: 40px;
   height: 40px;
-  margin-top: 15px;
+  margin-top: 25px;
 }
 
 .container input {
@@ -15,6 +15,10 @@
   cursor: pointer;
   height: 0;
   width: 0;
+}
+.word-overlay {
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 .checkmark {
