@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>OCR Overlay</title>
+    <link rel="stylesheet" type="text/css" href="style.css">
+    <style>
+        body {
+            background-color: #121212;
+            color: #ffffff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 20px;
+            margin: 0;
+            text-align: center;
+        }
+
+        .header {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            font-size: 2em;
+            margin: 0;
+        }
+
+        #screenshotButton {
+            padding: 10px 20px;
+            font-size: 16px;
+            background: linear-gradient(45deg, #6b00b6, #8e2de2); /* Gradient */
+            border: none;
+            color: white;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            cursor: pointer;
+            border-radius: 12px;
+            transition: background 0.4s, transform 0.2s;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        #screenshotButton:hover {
+            background: linear-gradient(45deg, #8e2de2, #6b00b6); /* Reversed Gradient */
+            transform: translateY(-2px);
+        }
+
+        #screenshotContainer {
+            width: 400px;
+            height: 200px;
+            overflow: auto;
+            border: 2px solid #333;
+            border-radius: 12px;
+            margin: 20px auto;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        }
+
+        #screenshotImage {
+            max-width: 100%;
+            height: auto;
+        }
+
+        .footer {
+            margin-top: 20px;
+            font-size: 14px;
+            color: #aaaaaa;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="header">
+        <h1>OCR Overlay</h1>
+        <button id="screenshotButton">Take Screenshot</button>
+    </div>
+    <div id="screenshotContainer">
+        <img id="screenshotImage" src="" alt="Screenshot">
+    </div>
+    <div class="footer">
+        
+        Made By- Devansh Matha<br>
+        Mail- Devansh0403@gmail.com
+    </div>
+
+   
+    <script src="popup.js"></script>
+</body>
+
+</html>
