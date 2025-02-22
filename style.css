@@ -1,24 +1,76 @@
-/* body {
-    width: 80px;
-    height: 40px;
-    padding: 10px;
-    position: relative;
-  }
-  
-  #screenshot-container {
-    max-width: 1000%;
-    max-height: 100%;
-    border: 1px solid black;
-    overflow: auto;
-    z-index: 999999; 
-  }
-  .word-overlay-container {
-    position: absolute;
-    background-color: rgba(255, 0, 0, );
-    color: black;
-    font-size: 12px;
-    padding: 2px;
-    
-   z-index: 999999;
-  }
-   */
+.container {
+  display: block;
+  position: relative;
+  cursor: pointer;
+  font-size: 25px;
+  user-select: none;
+  width: 40px;
+  height: 40px;
+  margin-top: 15px;
+}
+
+.container input {
+  position: absolute;
+  opacity: 0;
+  cursor: pointer;
+  height: 0;
+  width: 0;
+}
+
+.checkmark {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 1.3em;
+  width: 1.3em;
+  background-color: black;
+  border-radius: 50px;
+  transition: all 0.7s;
+  --spread: 20px;
+}
+
+.container input:checked ~ .checkmark {
+  background-color: black;
+  box-shadow: 
+    -10px -10px var(--spread) 0px #5B51D8,
+    0 -10px var(--spread) 0px #833AB4,
+    10px -10px var(--spread) 0px #E1306C,
+    10px 0 var(--spread) 0px #FD1D1D,
+    10px 10px var(--spread) 0px #F77737,
+    0 10px var(--spread) 0px #FCAF45,
+    -10px 10px var(--spread) 0px #FFDC80;
+}
+
+.checkmark:after {
+  content: "";
+  position: absolute;
+  display: none;
+}
+
+.container input:checked ~ .checkmark:after {
+  display: block;
+}
+
+.container .checkmark:after {
+  left: 0.45em;
+  top: 0.25em;
+  width: 0.25em;
+  height: 0.5em;
+  border: solid #f0f0f0;
+  border-width: 0 0.15em 0.15em 0;
+  transform: rotate(45deg);
+}
+
+.word-overlay {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  text-align: center;
+  cursor: text;
+  font-stretch: expanded;
+  z-index: 999999;
+}

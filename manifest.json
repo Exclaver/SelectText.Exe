@@ -4,8 +4,15 @@
     "manifest_version": 3,
     "permissions": [
         "activeTab",
-        "*://*/*"
+        "*://*/*",
+        "scripting",
+        "storage",
+        "downloads"
       ],
+      "web_accessible_resources": [{
+    "resources": ["style.css"],
+    "matches": ["<all_urls>"]
+  }],
       "background": {
         "service_worker": "background.js"
       },
@@ -17,6 +24,7 @@
         "48": "download.png",
         "128": "download.png"
     },
+    
       "content_security_policy": {
         "extension_pages": "script-src 'self'; object-src 'self'",
         "sandbox": "sandbox allow-scripts; script-src 'self' https://unpkg.com/;"

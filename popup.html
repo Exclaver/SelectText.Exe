@@ -13,6 +13,25 @@
             margin: 0;
             text-align: center;
         }
+        #toggleButton {
+            padding: 10px 20px;
+            font-size: 16px;
+            background: linear-gradient(45deg, #ff6b6b, #ff8e8e); /* Gradient */
+            border: none;
+            color: white;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            cursor: pointer;
+            border-radius: 12px;
+            transition: background 0.4s, transform 0.2s;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        #toggleButton:hover {
+            background: linear-gradient(45deg, #ff8e8e, #ff6b6b); /* Reversed Gradient */
+            transform: translateY(-2px);
+        }
 
         .header {
             display: flex;
@@ -74,6 +93,7 @@
     <div class="header">
         <h1>OCR Overlay</h1>
         <button id="screenshotButton">Take Screenshot</button>
+        <button id="toggleButton">Toggle Overlay</button>
     </div>
     <div id="screenshotContainer">
         <img id="screenshotImage" src="" alt="Screenshot">
