@@ -158,6 +158,114 @@ Object.assign(feedback.style, {
   });
 }
 // Add the processScreenshot function that was missing
+
+/////////ocr space api/////////////////////
+// function processScreenshot(video) {
+//   return new Promise((resolve) => {
+//     const videoRect = video.getBoundingClientRect();
+//     const scale = window.devicePixelRatio;
+
+//     // Create canvas and draw video
+//     const canvas = document.createElement('canvas');
+//     const ctx = canvas.getContext('2d');
+    
+//     // Set canvas size to video dimensions with scale
+//     canvas.width = videoRect.width * scale;
+//     canvas.height = videoRect.height * scale;
+    
+//     try {
+//       // Draw video at scaled size
+//       ctx.drawImage(
+//         video, 
+//         0, 0,                           
+//         video.videoWidth, video.videoHeight,  
+//         0, 0,                           
+//         canvas.width, canvas.height     
+//       );
+
+//       // Get base64 image
+//       const base64Image = canvas.toDataURL('image/jpeg', 1.0);
+//       const url = 'https://api.ocr.space/parse/image';
+//       const formData = new FormData();
+      
+//       formData.append('base64Image', base64Image);
+//       formData.append('apikey', 'K87012709288957');
+//       formData.append('OCREngine', '2');
+//       formData.append('language', 'eng');
+//       formData.append('scale', 'true');
+//       formData.append('isTable', 'false');
+//       formData.append('detectOrientation', 'true');
+//       formData.append('isOverlayRequired', 'true');
+
+//       fetch(url, {
+//         method: 'POST',
+//         body: formData
+//       })
+//       .then(response => response.json())
+//       .then(responseData => {
+//         if (responseData.OCRExitCode === 1 && responseData.ParsedResults) {
+//           // Convert OCR.space format to match Google Cloud Vision format
+//           const words = responseData.ParsedResults[0].TextOverlay.Lines.flatMap(line => 
+//             line.Words.map(word => ({
+//               text: word.WordText,
+//               y: word.Top / scale,
+//               x: word.Left / scale,
+//               height: word.Height / scale,
+//               width: word.Width / scale,
+//               right: (word.Left + word.Width) / scale // Add right edge position
+//             }))
+//           );
+
+//           // Sort words by vertical position first, then horizontal
+//           const processedWords = words
+//             .sort((a, b) => {
+//               // Group words into lines based on vertical position (within 10px)
+//               const yDiff = Math.abs(a.y - b.y);
+//               if (yDiff < 10) {
+//                 return a.x - b.x; // Same line, sort left to right
+//               }
+//               return a.y - b.y; // Different lines, sort top to bottom
+//             })
+//             .map((word, index) => {
+//               const nextWord = words[index + 1];
+//               if (nextWord) {
+//                 // If words are on the same line and gap is significant
+//                 if (Math.abs(word.y - nextWord.y) < 10 && 
+//                     (nextWord.x - word.right) > word.height * 0.3) {
+//                   word.text += ' '; // Add space
+//                 }
+//                 // If next word is on new line
+//                 if (Math.abs(word.y - nextWord.y) >= 10) {
+//                   word.text += '\n'; // Add newline
+//                 }
+//               }
+//               return {
+//                 text: word.text,
+//                 y: word.y + videoRect.top,
+//                 x: word.x + videoRect.left,
+//                 height: word.height,
+//                 width: word.width,
+//                 right: word.right + videoRect.left
+//               };
+//             });
+
+//           resolve(processedWords);
+//         } else {
+//           console.error('OCR Error:', responseData.ErrorMessage || 'Unknown error');
+//           resolve(null);
+//         }
+//       })
+//       .catch(error => {
+//         console.error('OCR Error:', error);
+//         resolve(null);
+//       });
+//     } catch (error) {
+//       console.error('Video capture error:', error);
+//       resolve(null);
+//     }
+//   });
+// }
+////////////////google cloud api/////////////////////
 function processScreenshot(video) {
   return new Promise((resolve) => {
     // Get video dimensions and position
@@ -262,6 +370,7 @@ function injectCSS() {
   });
 }
 function createToggleSwitch(video) {
+  // Create container
   const container = document.createElement('label');
   container.className = 'container';
   Object.assign(container.style, {
@@ -271,9 +380,11 @@ function createToggleSwitch(video) {
     left: 'auto',
     zIndex: '1000000',
     backgroundColor: 'transparent',
-    pointerEvents: 'all'
+    pointerEvents: 'all',
+    display: 'none' // Initially hidden
   });
 
+  // Create toggle switch input
   const toggleSwitch = document.createElement('input');
   toggleSwitch.type = 'checkbox';
   toggleSwitch.checked = false;
@@ -286,72 +397,61 @@ function createToggleSwitch(video) {
     height: '100%',
     zIndex: '1000001'
   });
-  
+
+  // Create checkmark element
   const checkmark = document.createElement('div');
   checkmark.className = 'checkmark';
   checkmark.style.pointerEvents = 'none';
 
-  // Prevent all mouse events on container except single clicks
-  container.addEventListener('mousedown', (event) => {
-    event.stopPropagation();
-    event.preventDefault();
+  // Reset OCR state and cleanup
+  const resetOCRState = () => {
+    hasProcessedOCR = false;
+    textVisible = false;
+    toggleSwitch.checked = false;
+    const wordOverlays = document.querySelectorAll('.word-overlay');
+    wordOverlays.forEach(overlay => overlay.remove());
+  };
+
+  // Video state event listeners
+  video.addEventListener('pause', () => {
+    container.style.display = 'block'; // Show when paused
   });
 
-  container.addEventListener('dblclick', (event) => {
-    event.stopPropagation();
-    event.preventDefault();
+  video.addEventListener('play', () => {
+    container.style.display = 'none'; // Hide when playing
+    resetOCRState();
   });
 
-  // Prevent all mouse events on toggle switch except change
-  toggleSwitch.addEventListener('mousedown', (event) => {
-    event.stopPropagation();
-    event.preventDefault();
+  // Add seeking and timeupdate listeners
+  video.addEventListener('seeking', () => {
+    resetOCRState();
   });
 
-  toggleSwitch.addEventListener('dblclick', (event) => {
+  video.addEventListener('seeked', () => {
+    if (video.paused) {
+      container.style.display = 'block';
+    }
+  });
+
+  // Prevent unwanted events
+  const preventEvent = (event) => {
     event.stopPropagation();
     event.preventDefault();
-  });
+  };
+
+  container.addEventListener('mousedown', preventEvent);
+  container.addEventListener('dblclick', preventEvent);
+  toggleSwitch.addEventListener('mousedown', preventEvent);
+  toggleSwitch.addEventListener('dblclick', preventEvent);
 
   // Handle checkbox changes
   toggleSwitch.addEventListener('change', async (event) => {
     event.stopPropagation();
     
     if (!hasProcessedOCR && event.target.checked) {
-      console.log('Processing OCR...');
       const words = await processScreenshot(video);
       if (words) {
-        console.log('OCR completed, creating overlays...');
-        const scrollX = window.scrollX;
-        const scrollY = window.scrollY;
-
-        words.forEach(box => {
-          const wordDiv = document.createElement('div');
-          wordDiv.className = 'word-overlay';
-          wordDiv.textContent = box.text;
-          wordDiv.setAttribute('data-text', box.text);
-          Object.assign(wordDiv.style, {
-            position: 'absolute',
-            top: (box.y + scrollY) + 'px',
-            left: (box.x + scrollX) + 'px',
-            width: box.width + 'px',
-            height: box.height + 'px',
-            backgroundColor: 'rgb(0, 0, 0)',
-            color: 'white',
-            fontSize: (box.height * 0.9) + 'px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            overflow: 'hidden',
-            whiteSpace: 'pre-wrap',
-            wordWrap: 'break-word',
-            textAlign: 'center',
-            cursor: 'text',
-            fontstretch: 'expanded',
-            zIndex: 999999
-          });
-          document.body.appendChild(wordDiv);
-        });
+        createWordOverlays(words);
         hasProcessedOCR = true;
         initializeTextSelection();
       }
@@ -365,11 +465,49 @@ function createToggleSwitch(video) {
     });
   });
 
+  // Initial state check
+  if (video.paused) {
+    container.style.display = 'block';
+  }
+
+  // Build and return container
   container.appendChild(toggleSwitch);
   container.appendChild(checkmark);
-  
   return container;
+}
 
+// Helper function to create word overlays
+function createWordOverlays(words) {
+  const scrollX = window.scrollX;
+  const scrollY = window.scrollY;
+
+  words.forEach(box => {
+    const wordDiv = document.createElement('div');
+    wordDiv.className = 'word-overlay';
+    wordDiv.textContent = box.text;
+    wordDiv.setAttribute('data-text', box.text);
+    Object.assign(wordDiv.style, {
+      position: 'absolute',
+      top: (box.y + scrollY) + 'px',
+      left: (box.x + scrollX) + 'px',
+      width: box.width + 'px',
+      height: box.height + 'px',
+      backgroundColor: 'rgb(0, 0, 0)',
+      color: 'white',
+      fontSize: (box.height * 0.9) + 'px',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      overflow: 'hidden',
+      whiteSpace: 'pre-wrap',
+      wordWrap: 'break-word',
+      textAlign: 'center',
+      cursor: 'text',
+      fontstretch: 'expanded',
+      zIndex: 999999
+    });
+    document.body.appendChild(wordDiv);
+  });
 }
 // Initialize toggle switches for existing videos
 async function initializeVideoControls() {
