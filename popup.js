@@ -1,6 +1,19 @@
 document.addEventListener("DOMContentLoaded", function () {
   const screenshotButton = document.getElementById("screenshotButton");
   const toggleButton = document.getElementById("toggleButton");
+  const logoutBtn = document.getElementById("logoutBtn");
+
+  // Add logout button handler
+  logoutBtn.addEventListener("click", function() {
+    chrome.runtime.sendMessage({ action: "logout" }, function(response) {
+      if (response && response.success) {
+        // Redirect to login page after successful logout
+        window.location.href = 'login.html';
+      } else {
+        console.error('Logout failed:', response ? response.error : 'Unknown error');
+      }
+    });
+  });
 
   screenshotButton.addEventListener("click", function () {
     chrome.runtime.sendMessage(

@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Login - OCR Overlay</title>
+    <style>
+        body {
+            width: 300px;
+            background-color: #201842;
+            color: #ffffff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 20px;
+            margin: 0;
+            text-align: center;
+        }
+
+        .login-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .button-container {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            width: 100%;
+        }
+
+        .oauth-button {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 12px 24px;
+            font-size: 16px;
+            background: white;
+            border: 1px solid #dadce0;
+            color: #3c4043;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            width: 80%;
+            margin: 0 auto;
+            font-family: 'Google Sans', 'Segoe UI', sans-serif;
+            font-weight: 500;
+        }
+
+        #oauthBtn:hover {
+            background: #f8f9fa;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+        }
+
+        #oauthBtn img {
+            width: 18px;
+            height: 18px;
+        }
+
+        #logoutBtn {
+            display: none;
+            background: #dc3545;
+            color: white;
+            border: none;
+        }
+
+        #logoutBtn:hover {
+            background: #c82333;
+        }
+
+        h2 {
+            margin-bottom: 10px;
+            font-size: 24px;
+        }
+
+        .status-text {
+            font-size: 14px;
+            color: #aaa;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <h2>Welcome to OCR Overlay</h2>
+        <div class="button-container">
+            <button class="oauth-button" id="oauthBtn">
+                <img src="https://www.google.com/favicon.ico" alt="Google">
+                Sign in with Google
+            </button>
+            <button class="oauth-button" id="logoutBtn">Sign Out</button>
+        </div>
+        <p class="status-text" id="statusText"></p>
+    </div>
+    <script src="login.js"></script>
+</body>
+</html>

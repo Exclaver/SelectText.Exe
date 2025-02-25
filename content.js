@@ -4,7 +4,15 @@ let isSelecting = false;
 let selectionStart = { x: 0, y: 0 };
 let selectionOverlay = null;
 
-
+// Add at the top of content.js
+async function checkAuthStatus() {
+  return new Promise((resolve) => {
+    chrome.runtime.sendMessage({ action: "checkAuth" }, function(response) {
+      console.log('Auth check response:', response);
+      resolve(response && response.isAuthenticated);
+    });
+  });
+}
 function initializeTextSelection() {
   const selectionStyles = `
     .selection-overlay {
@@ -21,7 +29,7 @@ function initializeTextSelection() {
   document.head.appendChild(style);
 
   document.addEventListener('mousedown', (e) => {
-    if (e.button === 0 && textVisible && hasProcessedOCR) { // Left click and overlay is visible
+    if (e.button === 0 && textVisible && hasProcessedOCR) {
       isSelecting = true;
       selectionStart = { x: e.clientX, y: e.clientY };
       
@@ -49,6 +57,7 @@ function initializeTextSelection() {
         width: width + 'px',
         height: height + 'px'
       });
+      
       const selectionBounds = {
         left: left,
         top: top,
@@ -60,16 +69,15 @@ function initializeTextSelection() {
       wordOverlays.forEach(overlay => {
         const rect = overlay.getBoundingClientRect();
         
-        // Check if overlay intersects with selection
         if (rect.left < selectionBounds.right &&
             rect.right > selectionBounds.left &&
             rect.top < selectionBounds.bottom &&
             rect.bottom > selectionBounds.top) {
-          overlay.style.backgroundColor = '#4287f5'; // Highlight color
-          overlay.style.color = 'black'; // Text color for better contrast
+          overlay.style.backgroundColor = '#4287f5';
+          overlay.style.color = 'black';
         } else {
-          overlay.style.backgroundColor = 'rgb(0, 0, 0)'; // Reset to original color
-          overlay.style.color = 'white'; // Reset to original text color
+          overlay.style.backgroundColor = 'rgb(0, 0, 0)';
+          overlay.style.color = 'white';
         }
       });
     }
@@ -77,9 +85,11 @@ function initializeTextSelection() {
 
   document.addEventListener('mouseup', (e) => {
     if (isSelecting && selectionOverlay) {
+      e.preventDefault();
+      e.stopPropagation();
+      
       isSelecting = false;
       
-      // Get selection bounds
       const selectionBounds = {
         left: parseInt(selectionOverlay.style.left),
         top: parseInt(selectionOverlay.style.top),
@@ -87,60 +97,69 @@ function initializeTextSelection() {
         bottom: parseInt(selectionOverlay.style.top) + parseInt(selectionOverlay.style.height)
       };
 
-      // Find all word overlays within selection
       const selectedText = [];
       const wordOverlays = document.querySelectorAll('.word-overlay');
       wordOverlays.forEach(overlay => {
         const rect = overlay.getBoundingClientRect();
         
-        // Check if overlay intersects with selection
         if (rect.left < selectionBounds.right &&
             rect.right > selectionBounds.left &&
             rect.top < selectionBounds.bottom &&
             rect.bottom > selectionBounds.top) {
           selectedText.push(overlay.getAttribute('data-text'));
         }
-        //reset overlay colours
         overlay.style.backgroundColor = 'rgb(0, 0, 0)';
         overlay.style.color = 'white';
       });
 
-      // Copy selected text to clipboard
       if (selectedText.length > 0) {
         const textToCopy = selectedText.join(' ');
+        
+        // Store video states before copying
+        const videos = document.querySelectorAll('video');
+        const videoStates = new Map();
+        
+        videos.forEach(video => {
+          videoStates.set(video, {
+            wasPaused: video.paused,
+            currentTime: video.currentTime
+          });
+          // Ensure video stays paused
+          video.pause();
+        });
+
         navigator.clipboard.writeText(textToCopy).then(() => {
-          // Show feedback (optional)
+          // Show feedback
           const feedback = document.createElement('div');
-Object.assign(feedback.style, {
-  position: 'fixed',
-  left: '50%',
-  top: selectionBounds.bottom + 10 + 'px',
-  transform: 'translateX(-50%)',
-  background: 'black',
-  color: 'white',
-  padding: '8px 16px',
-  borderRadius: '50px',
-  zIndex: '1000000',
-  opacity: '0',
-  transition: 'all 0.7s',
-  boxShadow: `
-    -10px -10px 20px 0px #5B51D8,
-    0 -10px 20px 0px #833AB4,
-    10px -10px 20px 0px #E1306C,
-    10px 0 20px 0px #FD1D1D,
-    10px 10px 20px 0px #F77737,
-    0 10px 20px 0px #FCAF45,
-    -10px 10px 20px 0px #FFDC80
-  `,
-  fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
-  fontSize: '14px',
-  fontWeight: '500',
-  textAlign: 'center'
+          Object.assign(feedback.style, {
+            position: 'fixed',
+            left: '50%',
+            top: selectionBounds.bottom + 10 + 'px',
+            transform: 'translateX(-50%)',
+            background: 'black',
+            color: 'white',
+            padding: '8px 16px',
+            borderRadius: '50px',
+            zIndex: '1000000',
+            opacity: '0',
+            transition: 'all 0.7s',
+            boxShadow: `
+              -10px -10px 20px 0px #5B51D8,
+              0 -10px 20px 0px #833AB4,
+              10px -10px 20px 0px #E1306C,
+              10px 0 20px 0px #FD1D1D,
+              10px 10px 20px 0px #F77737,
+              0 10px 20px 0px #FCAF45,
+              -10px 10px 20px 0px #FFDC80
+            `,
+            fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
+            fontSize: '14px',
+            fontWeight: '500',
+            textAlign: 'center'
           });
           feedback.textContent = 'Text copied!';
           document.body.appendChild(feedback);
           
-          // Animate feedback
           requestAnimationFrame(() => {
             feedback.style.opacity = '1';
             setTimeout(() => {
@@ -398,6 +417,46 @@ function createToggleSwitch(video) {
     zIndex: '1000001'
   });
 
+  // Handle toggle switch changes with authentication
+  // Inside createToggleSwitch function, update the toggle switch event listener:
+
+toggleSwitch.addEventListener('change', async (event) => {
+  event.stopPropagation();
+  
+  // Check authentication before processing
+  const isAuthenticated = await checkAuthStatus();
+  
+  if (!isAuthenticated) {
+    // Reset checkbox state
+    event.target.checked = false;
+    
+    // Open extension popup for login using chrome.action API
+    chrome.runtime.sendMessage({ action: "openLogin" }, (response) => {
+      if (chrome.runtime.lastError) {
+        console.error('Error opening login:', chrome.runtime.lastError);
+      }
+    });
+    return;
+  }
+  
+  // Continue with existing logic if authenticated
+  if (!hasProcessedOCR && event.target.checked) {
+    const words = await processScreenshot(video);
+    if (words) {
+      createWordOverlays(words);
+      hasProcessedOCR = true;
+      initializeTextSelection();
+    }
+  }
+
+  // Toggle visibility
+  textVisible = event.target.checked;
+  const wordOverlays = document.querySelectorAll('.word-overlay');
+  wordOverlays.forEach(overlay => {
+    overlay.style.display = textVisible ? 'flex' : 'none';
+  });
+});
+
   // Create checkmark element
   const checkmark = document.createElement('div');
   checkmark.className = 'checkmark';
@@ -443,27 +502,6 @@ function createToggleSwitch(video) {
   container.addEventListener('dblclick', preventEvent);
   toggleSwitch.addEventListener('mousedown', preventEvent);
   toggleSwitch.addEventListener('dblclick', preventEvent);
-
-  // Handle checkbox changes
-  toggleSwitch.addEventListener('change', async (event) => {
-    event.stopPropagation();
-    
-    if (!hasProcessedOCR && event.target.checked) {
-      const words = await processScreenshot(video);
-      if (words) {
-        createWordOverlays(words);
-        hasProcessedOCR = true;
-        initializeTextSelection();
-      }
-    }
-
-    // Toggle visibility
-    textVisible = event.target.checked;
-    const wordOverlays = document.querySelectorAll('.word-overlay');
-    wordOverlays.forEach(overlay => {
-      overlay.style.display = textVisible ? 'flex' : 'none';
-    });
-  });
 
   // Initial state check
   if (video.paused) {

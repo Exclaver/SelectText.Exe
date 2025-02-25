@@ -2,13 +2,22 @@
     "name":"SelectText.Exe",
     "version":"1.1",
     "manifest_version": 3,
+    "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA7rRhtxpg8gtlAOwWtm3SIrPbiRNkfMTQcjzr4E+p2zE21KObaVuYCS7IMWjLZNEEN+1HDmfV+5S7aXDeeApqLhxiPLKPhuUm7l/xSo/sNqnJJ5bp8YwWWVLrgA11dSnwYYvjJ+eBf+Cl13w9JzlLOQ1xoXPzaoF30GhzIep6/mjxz9f/JsBN5bSzftmyjbJG/a5jfNKl+L6+8hd/dL9+TVrzO/qSV//FcD3MW38K7flbQ16bGtROjXFvaeym6URkFc1cRE5PaVn50Bf4dNmQPQNN/uldyhTQJPo2sW7IZZX2oiCs3Sbwk3/lLUwmEKYsGPQkN/MPyvo9xXmCQudXUQIDAQAB", 
     "permissions": [
         "activeTab",
         "*://*/*",
         "scripting",
         "storage",
-        "downloads"
+        "downloads",
+        "identity"
       ],
+      "oauth2": {
+    "client_id": "963962857620-ub5qr7ogishs3j4i2hui1jsua3ahjm94.apps.googleusercontent.com",
+    "scopes": [
+      "https://www.googleapis.com/auth/userinfo.email",
+      "https://www.googleapis.com/auth/userinfo.profile"
+    ]
+  },
       "web_accessible_resources": [{
     "resources": ["style.css"],
     "matches": ["<all_urls>"]
@@ -17,7 +26,7 @@
         "service_worker": "background.js"
       },
       "action": {
-        "default_popup": "popup.html"
+        "default_popup": "login.html"
       },
       "icons": {
         "16": "download.png",
